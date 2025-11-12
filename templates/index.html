@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Zahoree Staffing Hub{% endblock %}
+
+{% block content %}
+    <h2>Dashboard (Home)</h2>
+    
+    <p>Esta página contendrá los KPIs, los filtros y las tablas de contrataciones recientes.</p>
+
+    {% if records|length > 0 %}
+        <p>¡Éxito! Se encontraron {{ records|length }} registros.</p>
+    {% else %}
+        <p>No hay registros disponibles o la tabla está vacía.</p>
+    {% endif %}
+
+    <hr>
+    
+    <p>Puedes navegar al menú "Add Employee" para ingresar datos.</p>
+    
+{% endblock content %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee - Zahoree Staffing Hub{% endblock %}
+
+{% block content %}
+    <h2>Añadir Nuevo Empleado</h2>
+    
+    <form method="POST" action="{{ url_for('create_record') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            
+            <div>
+                <label for="id">ID:</label><br>
+                <input type="text" id="id" name="id" required><br><br>
+
+                <label for="full_name">Nombre Completo:</label><br>
+                <input type="text" id="full_name" name="full_name" required><br><br>
+
+                <label for="account">Cuenta:</label><br>
+                <input type="text" id="account" name="account"><br><br>
+
+                <label for="position">Posición:</label><br>
+                <input type="text" id="position" name="position"><br><br>
+
+                <label for="date_of_admition">Fecha de Admisión:</label><br>
+                <input type="date" id="date_of_admition" name="date_of_admition"><br><br>
+
+                <label for="phone">Teléfono (Casa):</label><br>
+                <input type="text" id="phone" name="phone"><br><br>
+
+                <label for="cellphone">Celular:</label><br>
+                <input type="text" id="cellphone" name="cellphone"><br><br>
+            </div>
+
+            <div>
+                <label for="emergency_number">Número de Emergencia:</label><br>
+                <input type="text" id="emergency_number" name="emergency_number"><br><br>
+
+                <label for="address">Dirección:</label><br>
+                <input type="text" id="address" name="address"><br><br>
+
+                <label for="personal_email">Email Personal (ALTERNATIVE EMAIL):</label><br>
+                <input type="email" id="personal_email" name="personal_email"><br><br>
+
+                <label for="zahoree_email">Email Zahoree (E-MAIL):</label><br>
+                <input type="email" id="zahoree_email" name="zahoree_email"><br><br>
+
+                <label for="birthday">Fecha de Nacimiento:</label><br>
+                <input type="date" id="birthday" name="birthday"><br><br>
+
+                <label for="gender">Género:</label><br>
+                <select id="gender" name="gender">
+                    <option value="">Seleccione...</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                    <option value="O">Otro</option>
+                </select><br><br>
+            </div>
+        </div>
+        
+        <button type="submit" style="padding: 10px 20px; background-color: #2ecc71; color: white; border: none; cursor: pointer;">
+            Guardar Empleado
+        </button>
+    </form>
+{% endblock content %}
