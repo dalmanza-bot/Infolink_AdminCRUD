@@ -3,59 +3,85 @@
 {% block title %}Employees - Zahoree Staffing Hub{% endblock %}
 
 {% block content %}
-    <h2>Lista de Empleados ({{ employees|length }} Registros)</h2>
-    
-    <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
-        <h3>Filtros Rápidos</h3>
-        <p>Pendiente: Implementar filtros por Cuenta, Posición o Estatus.</p>
-    </div>
-    
-    {% if employees %}
-    <div style="overflow-x: auto;">
-        <table border="1" style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th>ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Cuenta</th>
-                    <th>Posición</th>
-                    <th>Estatus</th>
-                    <th>Fecha Admisión</th>
-                    <th>Acciones</th> </tr>
-            </thead>
-            <tbody>
-                {% for employee in employees %}
-                <tr>
-                    <td>{{ employee.Employee_ID }}</td>
-                    <td>{{ employee["FULL NAME"] }}</td>
-                    <td>{{ employee.ACCOUNT }}</td>
-                    <td>{{ employee.POSITION }}</td>
-                    <td>{{ employee.STATUS }}</td>
-                    <td>{{ employee["DATE OF ADMITION"] }}</td>
-                    <td>
-                        <button onclick="openEditModal('{{ employee.Employee_ID }}')">Editar</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+
+<div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
+</div>
+
+{% if employees %}
+<div style="overflow-x: auto;">
+
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>ID</th>
+                <th>Nombre Completo</th>
+                <th>Cuenta</th>
+                <th>Posición</th>
+                <th>Estatus</th>
+                <th>Fecha Admisión</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee.Employee_ID }}</td>
+                <td>{{ employee["FULL NAME"] }}</td>
+                <td>{{ employee.ACCOUNT }}</td>
+                <td>{{ employee.POSITION }}</td>
+                <td>{{ employee.STATUS }}</td>
+                <td>{{ employee["DATE OF ADMITION"] }}</td>
+                <td>
+                    <button onclick="openEditModal('{{ employee.Employee_ID }}')">Editar (Modal)</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>No se encontraron empleados en la base de datos **Infolink_Staff**.</p>
+{% endif %}
+
+<div style="margin: 24px 0 40px; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
+    {% if current_page > 1 %}
+    <a href="{{ url_for('list_employees', page=current_page - 1) }}"
+        style="text-decoration: none; padding: 5px 10px; border: 1px solid #333;">&laquo; Anterior</a>
     {% else %}
-    <p>No se encontraron empleados en la base de datos **Infolink_Staff**.</p>
+    <span style="padding: 5px 10px; border: 1px solid #ccc; color: #aaa;">&laquo; Anterior</span>
     {% endif %}
 
-    <div id="editModal" style="display:none; /* Aquí irá la lógica de CSS y JS para el modal */">
-        <h3>Editar Empleado</h3>
-        <p>Pendiente: Aquí se cargará el formulario de edición con los datos del empleado seleccionado.</p>
-        <button onclick="document.getElementById('editModal').style.display='none'">Cerrar</button>
-    </div>
+    {% for p in range(1, total_pages + 1) %}
+    {% if p == current_page %}
+    <span style="padding: 5px 10px; background-color: #333; color: white;">{{ p }}</span>
+    {% elif p >= current_page - 2 and p <= current_page + 2 %} <a href="{{ url_for('list_employees', page=p) }}"
+        style="text-decoration: none; padding: 5px 10px; border: 1px solid blue;">{{ p }}</a>
+        {% elif loop.index == 1 or loop.index == total_pages %}
+        <a href="{{ url_for('list_employees', page=p) }}"
+            style="text-decoration: none; padding: 5px 10px; border: 1px solid blue;">{{ p }}</a>
+        {% elif p == current_page - 3 or p == current_page + 3 %}
+        <span>...</span>
+        {% endif %}
+        {% endfor %}
 
-    <script>
-        function openEditModal(employeeId) {
-            // En una etapa posterior, esta función usará JavaScript (fetch) 
-            // para obtener los datos del empleado por ID y llenar el formulario.
-            alert('Abriendo modal para editar ID: ' + employeeId);
-            document.getElementById('editModal').style.display = 'block';
-        }
-    </script>
+        {% if current_page < total_pages %} <a href="{{ url_for('list_employees', page=current_page + 1) }}"
+            style="text-decoration: none; padding: 5px 10px; border: 1px solid #333;">Siguiente &raquo;</a>
+            {% else %}
+            <span style="padding: 5px 10px; border: 1px solid #ccc; color: #aaa;">Siguiente &raquo;</span>
+            {% endif %}
+</div>
+
+<div id="editModal" style="display:none; /* Aquí irá la lógica de CSS y JS para el modal */">
+    <h3>Editar Empleado</h3>
+    <p>Pendiente: Aquí se cargará el formulario de edición.</p>
+    <button onclick="document.getElementById('editModal').style.display='none'">Cerrar</button>
+</div>
+
+<script>
+    function openEditModal(employeeId) {
+        alert('Abriendo modal para editar ID: ' + employeeId);
+        document.getElementById('editModal').style.display = 'block';
+    }
+</script>
+
 {% endblock content %}

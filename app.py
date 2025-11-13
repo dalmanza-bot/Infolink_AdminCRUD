@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
 from supabase import create_client, Client
 import os
 
@@ -82,11 +82,19 @@ def update_record(ID):
 #
 @app.route("/employees")
 def list_employees():
-    try:        
-        response = supabase.table("Infolink_Staff").select("*").execute()        
-        data = response.data 
-        return render_template("employees.html", employees=data)
+    try:
+        # Parametros de paginacion
+        page = request.args.get("page", 1, type=int)
+        offset = (page - 1) * 20
+        limit = 20 - 1
+        count_response = supabase.table("Infolink_Staff").select("*", count="exact").execute()
+        total_records = count_response.count
 
+        response = supabase.table("Infolink_Staff").select("*").range(offset, offset + limit).execute()
+        records = response.data
+        total_pages = (total_records + 19) // 20 #calculo total de paginas
+
+        return render_template("employees.html", employees=records, current_page=page, total_pages=total_pages)
     except Exception as e:
         return f"<h1>Error de Conexión o Base de Datos</h1><p>Detalle: {e}</p>", 500
     
