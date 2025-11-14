@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
 from supabase import create_client, Client
-import os
 
 SUPABASE_URL = "https://exxahnckimfjvxfdhkrz.supabase.co" 
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4eGFobmNraW1manZ4ZmRoa3J6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTc1MjQ3MSwiZXhwIjoyMDc3MzI4NDcxfQ.hbO1OD5ikj7vx5bQfFrGDNYk_imG0KAuU6hIl2MUSqk" 
@@ -79,26 +78,102 @@ def update_record(ID):
     except Exception as e:
         return f"<h1>Error al Actualizar Registro</h1><p>Detalle: {e}</p>", 500
 
-#
 @app.route("/employees")
 def list_employees():
     try:
-        # Parametros de paginacion
+        # Parámetros de paginacion
         page = request.args.get("page", 1, type=int)
-        offset = (page - 1) * 20
-        limit = 20 - 1
-        count_response = supabase.table("Infolink_Staff").select("*", count="exact").execute()
-        total_records = count_response.count
+        if page < 1:
+            page = 1
+        per_page = 20
+        start = (page - 1) * per_page
+        end = start + per_page - 1
 
-        response = supabase.table("Infolink_Staff").select("*").range(offset, offset + limit).execute()
-        records = response.data
-        total_pages = (total_records + 19) // 20 #calculo total de paginas
+        # Filtros
+        status = request.args.get("status", "Active")
+        account = request.args.get("account", "")  # empty = no filter
+        q = request.args.get("q", "").strip()
 
-        return render_template("employees.html", employees=records, current_page=page, total_pages=total_pages)
+        # Construir filtros
+        count_query = supabase.table("Infolink_Staff").select("*", count="exact")
+        data_query = supabase.table("Infolink_Staff").select("*")
+
+        if status:
+            count_query = count_query.eq("STATUS", status)
+            data_query = data_query.eq("STATUS", status)
+
+        if account:
+            count_query = count_query.eq("ACCOUNT", account)
+            data_query = data_query.eq("ACCOUNT", account)
+
+        if q:
+            # ilike para buscar
+            count_query = count_query.filter("FULL NAME", "ilike", f"%{q}%")
+            data_query = data_query.filter("FULL NAME", "ilike", f"%{q}%")
+
+        # Obtener total
+        count_resp = count_query.execute()
+        total = getattr(count_resp, "count", None)
+        if total is None:
+            # contar filas recibidas
+            total = len(count_resp.data) if count_resp.data is not None else 0
+
+        # Obtener pagina actual
+        resp = data_query.range(start, end).execute()
+        data = resp.data or []
+
+        total_pages = (total + per_page - 1) // per_page if total else 1
+
+        # Cuentas para llenar el select
+        acc_resp = supabase.table("Infolink_Staff").select("ACCOUNT").execute()
+        accounts = sorted({r.get("ACCOUNT") for r in (acc_resp.data or []) if r.get("ACCOUNT")})
+
+        pagination = {
+            "current_page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "has_prev": page > 1,
+            "has_next": page < total_pages,
+        }
+
+        return render_template(
+            "employees.html",
+            employees=data,
+            accounts=accounts,
+            current_status=status,
+            current_account=account,
+            current_query=q,
+            current_page=page,
+            total_pages=total_pages,
+            total_records=total
+        )
+
     except Exception as e:
         return f"<h1>Error de Conexión o Base de Datos</h1><p>Detalle: {e}</p>", 500
-    
 
+# Autocompletado de nombres en el buscador
+@app.route("/employees/suggest")
+def employees_suggest():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+
+    try:
+        resp = supabase.table("Infolink_Staff")\
+            .select("FULL NAME")\
+            .filter("FULL NAME", "ilike", f"%{q}%")\
+            .limit(10)\
+            .execute()
+
+        names = []
+        for r in (resp.data or []):
+            name = r.get("FULL NAME")
+            if name and name not in names:
+                names.append(name)
+        return jsonify(names)
+    except Exception:
+        return jsonify([])
 
 if __name__ == "__main__":
     app.run(debug=True)

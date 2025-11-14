@@ -4,7 +4,46 @@
 
 {% block content %}
 
-<div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
+<div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <!-- Filtros: status, account, buscar -->
+    <form method="get" action="{{ url_for('list_employees') }}" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; width:100%;">
+        <div>
+            <label for="status">Estatus</label><br>
+            <select name="status" id="status" style="padding:6px;">
+                <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if current_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="account">Cuenta</label><br>
+            <select name="account" id="account" style="padding:6px;">
+                <option value="" {% if not current_account %}selected{% endif %}>Todas</option>
+                {% for acc in accounts %}
+                <option value="{{ acc }}" {% if acc == current_account %}selected{% endif %}>{{ acc }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex:1; min-width:220px;">
+            <label for="q">Nombre Completo</label><br>
+            <input
+                id="q"
+                name="q"
+                list="nameSuggestions"
+                value="{{ current_query }}"
+                placeholder="Buscar por nombre..."
+                style="width:100%; padding:6px;"
+                oninput="debouncedSuggest(this.value)"
+            />
+            <datalist id="nameSuggestions"></datalist>
+        </div>
+
+        <div>
+            <button type="submit" style="padding:8px 12px;">Aplicar</button>
+            <a href="{{ url_for('list_employees') }}" style="padding:8px 12px; display:inline-block; text-decoration:none; border:1px solid #ccc; border-radius:4px; margin-left:6px;">Limpiar</a>
+        </div>
+    </form>
 </div>
 
 {% if employees %}
@@ -43,6 +82,7 @@
 <p>No se encontraron empleados en la base de datos **Infolink_Staff**.</p>
 {% endif %}
 
+<!-- Paginacion de la tabla -->
 <div style="margin: 24px 0 40px; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
     {% if current_page > 1 %}
     <a href="{{ url_for('list_employees', page=current_page - 1) }}"
@@ -81,6 +121,31 @@
     function openEditModal(employeeId) {
         alert('Abriendo modal para editar ID: ' + employeeId);
         document.getElementById('editModal').style.display = 'block';
+    }
+
+    // Debounce helper
+    let suggestTimer = null;
+    function debouncedSuggest(val) {
+        if (suggestTimer) clearTimeout(suggestTimer);
+        suggestTimer = setTimeout(()=> { doSuggest(val); }, 250);
+    }
+
+    async function doSuggest(q) {
+        const datalist = document.getElementById('nameSuggestions');
+        datalist.innerHTML = '';
+        if (!q || q.length < 1) return;
+        try {
+            const res = await fetch(`{{ url_for('employees_suggest') }}?q=${encodeURIComponent(q)}`);
+            if (!res.ok) return;
+            const names = await res.json();
+            names.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                datalist.appendChild(opt);
+            });
+        } catch (e) {
+            console.error('Error fetching suggestions:', e);            
+        }
     }
 </script>
 
